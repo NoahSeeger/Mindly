@@ -9,7 +9,7 @@ const navItems = [
   { icon: Home, label: "Home", href: "/" },
   { icon: PlusCircle, label: "New Entry", href: "/daily-entry" },
   { icon: BookOpen, label: "Templates", href: "/templates" },
-  { icon: Archive, label: "History", href: "/" },
+  { icon: Archive, label: "History", href: "/History" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
 
