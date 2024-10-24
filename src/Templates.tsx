@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +17,7 @@ import { PlusCircle, Pencil, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { openDB } from "idb";
 
 const predefinedTemplates = [
   {
@@ -39,15 +40,58 @@ const predefinedTemplates = [
   },
 ];
 
+// Initialize IndexedDB
+async function initDB() {
+  return openDB("journalDB", 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains("selectedTemplate")) {
+        db.createObjectStore("selectedTemplate", { keyPath: "id" });
+      }
+    },
+  });
+}
+
+// Save selected template to IndexedDB
+async function saveSelectedTemplate(template) {
+  const db = await initDB();
+  await db.put("selectedTemplate", template);
+}
+
+// Retrieve selected template from IndexedDB
+async function getSelectedTemplate() {
+  const db = await initDB();
+  return await db.get("selectedTemplate", 1);
+}
+
 export default function Templates() {
   const [templates, setTemplates] = useState(predefinedTemplates);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newTemplate, setNewTemplate] = useState({ title: "", content: "" });
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Load the selected template on component mount
+    getSelectedTemplate().then((template) => {
+      if (template) {
+        setSelectedTemplate(template);
+      }
+    });
+  }, []);
+
+  const handleSelectTemplate = (template) => {
+    setSelectedTemplate(template);
+    saveSelectedTemplate(template);
+    toast({
+      title: "Template Selected",
+      description: `You have selected the "${template.title}" template.`,
+    });
+  };
+
   const handleSaveTemplate = () => {
     if (newTemplate.title && newTemplate.content) {
-      setTemplates([...templates, { ...newTemplate, id: Date.now() }]);
+      const newEntry = { ...newTemplate, id: Date.now() };
+      setTemplates([...templates, newEntry]);
       setNewTemplate({ title: "", content: "" });
       setIsCreating(false);
       toast({
@@ -60,6 +104,15 @@ export default function Templates() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
+        {selectedTemplate && (
+          <div className="mb-6 p-4 bg-gray-100 rounded">
+            <h2 className="text-xl font-bold">Current Template</h2>
+            <h3 className="text-lg">{selectedTemplate.title}</h3>
+            <pre className="whitespace-pre-wrap text-sm">
+              {selectedTemplate.content}
+            </pre>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-6">
           <Button variant="ghost" size="icon" asChild>
             <Link to="/">
@@ -91,7 +144,11 @@ export default function Templates() {
                   </pre>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => handleSelectTemplate(template)}
+                  >
                     Use Template
                   </Button>
                 </CardFooter>

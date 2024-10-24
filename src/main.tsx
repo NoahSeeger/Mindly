@@ -8,6 +8,7 @@ import Dashboard from "./Dashboard";
 import Daily_Entry from "./Daily_Entry";
 import Settings from "./Settings";
 import Templates from "./Templates";
+import { BottomNavbar } from "./components/navbar";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -18,6 +19,7 @@ createRoot(document.getElementById("root")!).render(
       disableTransitionOnChange
     >
       <BrowserRouter>
+        <BottomNavbar />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/daily_entry" element={<Daily_Entry />} />

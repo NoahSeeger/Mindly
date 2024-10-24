@@ -123,7 +123,7 @@ export default function Dashboard() {
           </Card>
         </div>
       </main>
-
+      {/* 
       <Button
         className="fixed bottom-6 right-6 rounded-full shadow-lg"
         size="lg"
@@ -132,7 +132,7 @@ export default function Dashboard() {
         <Link to="/daily_entry">
           <PlusCircle className="mr-2 h-5 w-5" /> New Entry
         </Link>
-      </Button>
+      </Button> */}
     </div>
   );
 }
