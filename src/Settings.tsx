@@ -26,6 +26,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { openDB } from "idb";
 
+import { generateToken } from "./notifications/firebaseSetup";
+
 export default function Settings() {
   const [notifications, setNotifications] = useState(true);
   const [notificationTime, setNotificationTime] = useState("20:00");
@@ -142,6 +144,14 @@ export default function Settings() {
                 />
               </div>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="notification-permission">
+                Request Notification Permission
+              </Label>
+              <Button onClick={generateToken} id="notification-permission">
+                Request Permission
+              </Button>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="storage-permission">
                 Request Storage Permission
