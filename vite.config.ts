@@ -13,9 +13,10 @@ export default defineConfig({
       filename: "firebase-messaging-sw.js",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
-        name: "Vite PWA Project",
-        short_name: "Vite PWA Project",
+        name: "Mindly",
+        short_name: "Mindly",
         theme_color: "#ffffff",
+        display: "standalone",
         icons: [
           {
             src: "pwa-64x64.png",

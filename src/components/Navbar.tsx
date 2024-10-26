@@ -29,7 +29,11 @@ export function BottomNavbar() {
                   pathname === item.href && "text-primary"
                 )}
               >
-                <item.icon className="h-6 w-6" />
+                <item.icon
+                  className="h-6 w-6"
+                  strokeWidth={pathname === item.href ? 3 : 2}
+                  // fill={pathname === item.href ? "#ffffff" : "#ffffff"}
+                />
                 <span className="text-xs mt-1">{item.label}</span>
               </Link>
             </li>

@@ -75,6 +75,27 @@ export default function Dashboard() {
   const [heatmapValues, setHeatmapValues] = useState<HeatmapValue[]>([]);
 
   useEffect(() => {
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+      .matches
+      ? "dark"
+      : "light";
+    setTheme(systemTheme);
+  }, [setTheme]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e: MediaQueryListEvent) => {
+      setTheme(e.matches ? "dark" : "light");
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, [setTheme]);
+
+  useEffect(() => {
     // Load entries and calculate the current streak
     async function loadEntriesAndCalculateStreak() {
       try {
