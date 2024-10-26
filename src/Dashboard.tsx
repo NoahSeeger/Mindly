@@ -120,7 +120,7 @@ export default function Dashboard() {
   const today = new Date();
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="container flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">

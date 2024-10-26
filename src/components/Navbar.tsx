@@ -17,7 +17,7 @@ export function BottomNavbar() {
   const pathname = useLocation().pathname;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
+    <nav className="pb-2 fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
       <div className="container mx-auto px-4">
         <ul className="flex justify-around items-center h-16">
           {navItems.map((item) => (

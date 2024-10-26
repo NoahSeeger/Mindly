@@ -177,7 +177,7 @@ export default function History() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-primary">Journal History</h1>
       <Tabs defaultValue="list" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
