@@ -6,16 +6,14 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { BookHeart, Settings, Bell, PlusCircle, Sun, Moon } from "lucide-react";
-import { motion } from "framer-motion";
+import { BookHeart, Settings, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { openDB } from "idb";
-import { format, differenceInCalendarDays } from "date-fns";
+import { differenceInCalendarDays } from "date-fns";
 import { Link } from "react-router-dom";
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
@@ -40,12 +38,12 @@ async function getAllEntries() {
 }
 
 // Function to calculate the current streak
-function calculateStreak(entries) {
+function calculateStreak(entries: any[]): number {
   if (!entries.length) return 0;
 
   // Sort entries by date in descending order
   const sortedEntries = entries.sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
   let streak = 0;
@@ -66,11 +64,16 @@ function calculateStreak(entries) {
   return streak;
 }
 
+interface HeatmapValue {
+  date: string;
+  count: number;
+}
+
 export default function Dashboard() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { setTheme, theme } = useTheme();
   const [streak, setStreak] = useState(0);
-  const [heatmapValues, setHeatmapValues] = useState([]);
+  const [heatmapValues, setHeatmapValues] = useState<HeatmapValue[]>([]);
 
   useEffect(() => {
     // Load entries and calculate the current streak
@@ -81,7 +84,7 @@ export default function Dashboard() {
         setStreak(currentStreak);
 
         // Prepare heatmap values
-        const values = entries.map((entry) => ({
+        const values = entries.map((entry: any) => ({
           date: entry.date,
           count: 1, // Assuming each entry is a single count
         }));
@@ -144,7 +147,7 @@ export default function Dashboard() {
               }
               endDate={today}
               values={heatmapValues}
-              classForValue={(value) => {
+              classForValue={(value: HeatmapValue | null) => {
                 if (!value) {
                   return "color-empty";
                 }
@@ -184,16 +187,6 @@ export default function Dashboard() {
           </Card>
         </div>
       </main>
-      {/* 
-      <Button
-        className="fixed bottom-6 right-6 rounded-full shadow-lg"
-        size="lg"
-        asChild
-      >
-        <Link to="/daily_entry">
-          <PlusCircle className="mr-2 h-5 w-5" /> New Entry
-        </Link>
-      </Button> */}
     </div>
   );
 }

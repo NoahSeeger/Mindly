@@ -20,11 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Bell } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-// import indexed db
+import { openDB } from "idb";
 
 export default function Settings() {
   const [notifications, setNotifications] = useState(true);
@@ -32,34 +32,58 @@ export default function Settings() {
   const [theme, setTheme] = useState("system");
   const { toast } = useToast();
 
-  const handleSave = () => {
-    // Here you would typically save the settings to your backend
-    let db;
-    const request = indexedDB.open("MyTestDatabase");
-    request.onerror = (event) => {
-      console.error("Why didn't you allow my web app to use IndexedDB?!");
-    };
-    request.onsuccess = (event) => {
-      console.log("Success!");
-      db = event.target.result;
-    };
-    toast({
-      title: "Settings Saved",
-      description: "Your preferences have been updated successfully.",
-    });
+  const handleSave = async () => {
+    try {
+      const db = await openDB("MyTestDatabase", 1, {
+        upgrade(db) {
+          db.createObjectStore("settings");
+        },
+      });
+
+      await db.put(
+        "settings",
+        {
+          notifications,
+          notificationTime,
+          theme,
+        },
+        "userSettings"
+      );
+
+      toast({
+        title: "Settings Saved",
+        description: "Your preferences have been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  // Request persistent storage
-  async function requestPersistentStorage() {
+  const requestPersistentStorage = async () => {
     if (navigator.storage && navigator.storage.persist) {
-      const isPersisted = await navigator.storage.persist();
-      console.log(`Storage persisted: ${isPersisted}`);
-      toast({
-        title: "Storage Permission",
-        description: isPersisted
-          ? "Persistent storage granted."
-          : "Persistent storage request denied. Please ensure your site is secure and try again.",
-      });
+      try {
+        const isPersisted = await navigator.storage.persist();
+        console.log(`Storage persisted: ${isPersisted}`);
+        toast({
+          title: "Storage Permission",
+          description: isPersisted
+            ? "Persistent storage granted."
+            : "Persistent storage request denied. Please ensure your site is secure and try again.",
+        });
+      } catch (error) {
+        console.error("Error requesting persistent storage:", error);
+        toast({
+          title: "Error",
+          description:
+            "Failed to request persistent storage. Please try again.",
+          variant: "destructive",
+        });
+      }
     } else {
       console.log("Persistent storage is not supported by this browser.");
       toast({
@@ -67,7 +91,7 @@ export default function Settings() {
         description: "Persistent storage is not supported by this browser.",
       });
     }
-  }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -118,8 +142,13 @@ export default function Settings() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="theme">Request Storage Permission</Label>
-              <Button onClick={requestPersistentStorage} className="">
+              <Label htmlFor="storage-permission">
+                Request Storage Permission
+              </Label>
+              <Button
+                onClick={requestPersistentStorage}
+                id="storage-permission"
+              >
                 Request Permission
               </Button>
             </div>

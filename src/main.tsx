@@ -9,7 +9,7 @@ import Daily_Entry from "./Daily_Entry";
 import Templates from "./Templates";
 import History from "./History";
 import Settings from "./Settings";
-import { BottomNavbar } from "./components/navbar";
+import { BottomNavbar } from "./components/Navbar";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

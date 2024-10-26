@@ -16,12 +16,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-// import { Layout } from "@/components/layout";
-import { openDB } from "idb";
+import { openDB, IDBPDatabase } from "idb";
+
+interface Template {
+  id: number;
+  title: string;
+  content: string;
+}
+
+interface SelectedTemplateDB {
+  selectedTemplate: {
+    key: number;
+    value: Template;
+  };
+}
 
 // Initialize a separate IndexedDB for selected template
-async function initSelectedTemplateDB() {
-  return openDB("selectedTemplateDB", 1, {
+async function initSelectedTemplateDB(): Promise<
+  IDBPDatabase<SelectedTemplateDB>
+> {
+  return openDB<SelectedTemplateDB>("selectedTemplateDB", 1, {
     upgrade(db) {
       if (!db.objectStoreNames.contains("selectedTemplate")) {
         db.createObjectStore("selectedTemplate", { keyPath: "id" });
@@ -31,7 +45,7 @@ async function initSelectedTemplateDB() {
 }
 
 // Save selected template to the separate IndexedDB
-async function saveSelectedTemplate(template) {
+async function saveSelectedTemplate(template: Template): Promise<void> {
   const db = await initSelectedTemplateDB();
   const tx = db.transaction("selectedTemplate", "readwrite");
   const store = tx.objectStore("selectedTemplate");
@@ -46,12 +60,12 @@ async function saveSelectedTemplate(template) {
 }
 
 // Load selected template from the separate IndexedDB
-async function loadSelectedTemplate() {
+async function loadSelectedTemplate(): Promise<Template | undefined> {
   const db = await initSelectedTemplateDB();
-  return await db.get("selectedTemplate", 1);
+  return db.get("selectedTemplate", 1);
 }
 
-const predefinedTemplates = [
+const predefinedTemplates: Template[] = [
   {
     id: 1,
     title: "Daily Gratitude",
@@ -73,10 +87,13 @@ const predefinedTemplates = [
 ];
 
 export default function Templates() {
-  const [templates, setTemplates] = useState(predefinedTemplates);
+  const [templates, setTemplates] = useState<Template[]>(predefinedTemplates);
   const [isCreating, setIsCreating] = useState(false);
-  const [newTemplate, setNewTemplate] = useState({ title: "", content: "" });
-  const [selectedTemplate, setSelectedTemplate] = useState(
+  const [newTemplate, setNewTemplate] = useState<Omit<Template, "id">>({
+    title: "",
+    content: "",
+  });
+  const [selectedTemplate, setSelectedTemplate] = useState<Template>(
     predefinedTemplates[0]
   );
   const { toast } = useToast();
@@ -92,11 +109,12 @@ export default function Templates() {
 
   const handleSaveTemplate = () => {
     if (newTemplate.title && newTemplate.content) {
-      const newTemplateWithId = { ...newTemplate, id: Date.now() };
+      const newTemplateWithId: Template = { ...newTemplate, id: Date.now() };
       setTemplates([...templates, newTemplateWithId]);
       setNewTemplate({ title: "", content: "" });
       setIsCreating(false);
       setSelectedTemplate(newTemplateWithId);
+      saveSelectedTemplate(newTemplateWithId);
       toast({
         title: "Template Saved",
         description: "Your new template has been created and selected.",
@@ -104,9 +122,9 @@ export default function Templates() {
     }
   };
 
-  const handleSelectTemplate = (template) => {
+  const handleSelectTemplate = (template: Template) => {
     setSelectedTemplate(template);
-    saveSelectedTemplate(template); // Save the selected template
+    saveSelectedTemplate(template);
     toast({
       title: "Template Selected",
       description: `"${template.title}" will be used for your next entry.`,

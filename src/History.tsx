@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/select";
 
 import {
-  LeadingActions,
   SwipeableList,
   SwipeableListItem,
   SwipeAction,
@@ -37,7 +36,7 @@ import {
 import "react-swipeable-list/dist/styles.css";
 
 import { motion } from "framer-motion";
-import { format, subYears, getYear } from "date-fns";
+import { format, getYear } from "date-fns";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 
 // Open the IndexedDB database

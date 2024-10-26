@@ -15,16 +15,40 @@ import { ImagePlus, Save, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { openDB } from "idb";
+import { openDB, IDBPDatabase, DBSchema } from "idb";
+
+interface SelectedTemplateDB extends DBSchema {
+  selectedTemplate: {
+    key: number;
+    value: {
+      id: number;
+      content: string;
+    };
+  };
+}
+
+interface JournalDB extends DBSchema {
+  entries: {
+    key: number;
+    value: {
+      entry: string;
+      image: string | null;
+      date: Date;
+    };
+    autoIncrement: true;
+  };
+}
 
 // Load selected template from the separate IndexedDB
-async function loadSelectedTemplate() {
-  const db = await openDB("selectedTemplateDB", 1);
-  return await db.get("selectedTemplate", 1);
+async function loadSelectedTemplate(): Promise<
+  { content: string } | undefined
+> {
+  const db = await openDB<SelectedTemplateDB>("selectedTemplateDB", 1);
+  return db.get("selectedTemplate", 1);
 }
 
 // Request persistent storage
-async function requestPersistentStorage() {
+async function requestPersistentStorage(): Promise<void> {
   if (navigator.storage && navigator.storage.persist) {
     const isPersisted = await navigator.storage.persist();
     console.log(`Storage persisted: ${isPersisted}`);
@@ -32,8 +56,8 @@ async function requestPersistentStorage() {
 }
 
 // Initialize IndexedDB
-async function initDB() {
-  return openDB("journalDB", 1, {
+async function initDB(): Promise<IDBPDatabase<JournalDB>> {
+  return openDB<JournalDB>("journalDB", 1, {
     upgrade(db) {
       if (!db.objectStoreNames.contains("entries")) {
         db.createObjectStore("entries", { keyPath: "id", autoIncrement: true });
@@ -43,14 +67,14 @@ async function initDB() {
 }
 
 // Save entry to IndexedDB
-async function saveEntry(entry, image) {
+async function saveEntry(entry: string, image: string | null): Promise<void> {
   const db = await initDB();
   await db.add("entries", { entry, image, date: new Date() });
 }
 
 export default function DailyEntry() {
   const [entry, setEntry] = useState("");
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,11 +86,15 @@ export default function DailyEntry() {
     });
   }, []);
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => setImage(e.target.result);
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target?.result) {
+          setImage(e.target.result as string);
+        }
+      };
       reader.readAsDataURL(file);
     }
   };
