@@ -4,11 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
+body {
   /*make the font family popppins and choose a backup*/
   font-family: "Poppins", sans-serif;
   font-weight: 600;
   font-style: normal;
+
+  padding-top: env(safe-area-inset-top) !important;
+  padding-right: env(safe-area-inset-right) !important;
+  padding-bottom: env(safe-area-inset-bottom) !important;
+  padding-left: env(safe-area-inset-left) !important;
 }
 
 @layer base {
