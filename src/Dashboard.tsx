@@ -104,7 +104,7 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <BookHeart className="h-6 w-6" />
-            Daily Gratitude Journal
+            Mindly
           </h1>
           <nav className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>

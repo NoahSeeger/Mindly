@@ -1,78 +1,91 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+* {
+  /*make the font family popppins and choose a backup*/
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Updated color variables for a cozy, modern feel */
+    --background: 30 30% 98%; /* Soft beige for a warm background */
+    --foreground: 0 0% 10%; /* Warm dark gray for primary text */
+    --card: 0 0% 100%; /* White for card background */
+    --card-foreground: 0 0% 10%; /* Darker text on cards */
+    --popover: 0 0% 100%; /* White for popover background */
+    --popover-foreground: 0 0% 10%; /* Dark gray for popover text */
+    --primary: 14 64% 52%; /* Muted terracotta as primary accent */
+    --primary-foreground: 0 0% 100%; /* White for primary foreground */
+    --secondary: 85 37% 65%; /* Soft sage green as secondary accent */
+    --secondary-foreground: 0 0% 10%; /* Dark text on secondary */
+    --muted: 0 0% 95%; /* Light taupe for muted backgrounds */
+    --muted-foreground: 0 0% 40%; /* Dark taupe for muted text */
+    --accent: 0 0% 95%; /* Light taupe for accent background */
+    --accent-foreground: 0 0% 10%; /* Dark gray on accent */
+    --destructive: 0 84.2% 60.2%; /* Softer red for destructive actions */
+    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
+    --border: 0 0% 85%; /* Light grayish beige for borders */
+    --input: 0 0% 85%; /* Light beige for input backgrounds */
+    --ring: 0 0% 60%; /* Light muted ring color */
+    --chart-1: 25 70% 55%; /* Warm color palette for charts */
+    --chart-2: 145 50% 45%; /* Chart color variations */
+    --chart-3: 185 40% 30%;
+    --chart-4: 35 70% 60%;
+    --chart-5: 55 75% 65%;
+    --radius: 0.75rem; /* Slightly rounded corners for a cozy look */
+    --sidebar-background: 30 30% 98%; /* Beige sidebar background */
+    --sidebar-foreground: 240 5.3% 26.1%; /* Soft dark gray */
+    --sidebar-primary: 14 64% 52%; /* Terracotta for sidebar primary */
+    --sidebar-primary-foreground: 0 0% 100%; /* White for sidebar text */
+    --sidebar-accent: 85 37% 65%; /* Sage green for sidebar accent */
+    --sidebar-accent-foreground: 0 0% 10%; /* Dark text on accent */
+    --sidebar-border: 220 13% 91%; /* Light sidebar border */
+    --sidebar-ring: 0 0% 80%; /* Muted ring for sidebar */
   }
+
+  /* Dark mode with warmer, cozy colors */
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --background: 0 0% 10%; /* Dark charcoal for background */
+    --foreground: 0 0% 90%; /* Warm white for primary text */
+    --card: 0 0% 15%; /* Dark card background */
+    --card-foreground: 0 0% 90%; /* Light text on cards */
+    --popover: 0 0% 15%; /* Dark popover background */
+    --popover-foreground: 0 0% 90%; /* Light text on popover */
+    --primary: 14 64% 52%; /* Muted terracotta for primary accent */
+    --primary-foreground: 0 0% 100%; /* White on primary */
+    --secondary: 85 37% 45%; /* Deep sage green for secondary accent */
+    --secondary-foreground: 0 0% 90%; /* Light text on secondary */
+    --muted: 0 0% 20%; /* Dark muted background */
+    --muted-foreground: 0 0% 63.9%; /* Light muted text */
+    --accent: 0 0% 20%; /* Dark muted accent */
+    --accent-foreground: 0 0% 90%; /* Light on accent */
+    --destructive: 0 62.8% 45%; /* Softer red for destructive */
+    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
+    --border: 0 0% 30%; /* Darker muted border */
+    --input: 0 0% 25%; /* Darker muted input */
+    --ring: 0 0% 83.1%; /* Soft light ring */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 10%; /* Dark sidebar */
+    --sidebar-foreground: 0 0% 90%; /* Light text in sidebar */
+    --sidebar-primary: 14 64% 52%; /* Terracotta primary */
+    --sidebar-primary-foreground: 0 0% 100%; /* White on primary */
+    --sidebar-accent: 85 37% 25%; /* Dark sage accent */
+    --sidebar-accent-foreground: 0 0% 90%; /* Light text on accent */
+    --sidebar-border: 0 0% 25%; /* Dark border */
+    --sidebar-ring: 0 0% 60%; /* Dark muted ring */
   }
 }
+
 @layer base {
   * {
     @apply border-border;
