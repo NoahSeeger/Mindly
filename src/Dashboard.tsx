@@ -60,7 +60,6 @@ function calculateStreak(entries: any[]): number {
       break;
     }
   }
-
   return streak;
 }
 

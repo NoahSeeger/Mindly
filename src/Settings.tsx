@@ -65,6 +65,7 @@ export default function Settings() {
   };
 
   const requestPersistentStorage = async () => {
+    Notification.requestPermission();
     if (navigator.storage && navigator.storage.persist) {
       try {
         const isPersisted = await navigator.storage.persist();

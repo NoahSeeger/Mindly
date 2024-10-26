@@ -10,6 +10,7 @@ export default defineConfig({
     qrcode(),
     VitePWA({
       registerType: "autoUpdate",
+      // filename: "custom-service-worker.js",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
         name: "Vite PWA Project",
@@ -40,6 +41,7 @@ export default defineConfig({
           },
         ],
       },
+      // devOptions: { enabled: true },
     }),
   ],
   resolve: {
