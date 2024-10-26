@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,6 +16,12 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { openDB } from "idb";
+
+// Load selected template from the separate IndexedDB
+async function loadSelectedTemplate() {
+  const db = await openDB("selectedTemplateDB", 1);
+  return await db.get("selectedTemplate", 1);
+}
 
 // Request persistent storage
 async function requestPersistentStorage() {
@@ -46,6 +52,15 @@ export default function DailyEntry() {
   const [entry, setEntry] = useState("");
   const [image, setImage] = useState(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Load the selected template from IndexedDB on component mount
+    loadSelectedTemplate().then((template) => {
+      if (template) {
+        setEntry(template.content); // Set the entry content to the template content
+      }
+    });
+  }, []);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];

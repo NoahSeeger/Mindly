@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,26 +14,87 @@ import { Calendar } from "@/components/ui/calendar";
 import { BookHeart, Settings, Bell, PlusCircle, Sun, Moon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-// You'll need to install react-calendar-heatmap
+import { openDB } from "idb";
+import { format, differenceInCalendarDays } from "date-fns";
+import { Link } from "react-router-dom";
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
-//Importt link from react router dom
-import { Link } from "react-router-dom";
+
+// Function to open the IndexedDB database
+async function openDatabase() {
+  return openDB("journalDB", 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains("entries")) {
+        db.createObjectStore("entries", { keyPath: "id", autoIncrement: true });
+      }
+    },
+  });
+}
+
+// Function to retrieve all entries from IndexedDB
+async function getAllEntries() {
+  const db = await openDatabase();
+  const transaction = db.transaction("entries", "readonly");
+  const objectStore = transaction.objectStore("entries");
+  return await objectStore.getAll();
+}
+
+// Function to calculate the current streak
+function calculateStreak(entries) {
+  if (!entries.length) return 0;
+
+  // Sort entries by date in descending order
+  const sortedEntries = entries.sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
+
+  let streak = 0;
+  let currentDate = new Date();
+
+  for (const entry of sortedEntries) {
+    const entryDate = new Date(entry.date);
+    const diffDays = differenceInCalendarDays(currentDate, entryDate);
+
+    if (diffDays === 0 || diffDays === 1) {
+      streak++;
+      currentDate = entryDate;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
 
 export default function Dashboard() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { setTheme, theme } = useTheme();
+  const [streak, setStreak] = useState(0);
+  const [heatmapValues, setHeatmapValues] = useState([]);
 
-  // Sample data for the heatmap
+  useEffect(() => {
+    // Load entries and calculate the current streak
+    async function loadEntriesAndCalculateStreak() {
+      try {
+        const entries = await getAllEntries();
+        const currentStreak = calculateStreak(entries);
+        setStreak(currentStreak);
+
+        // Prepare heatmap values
+        const values = entries.map((entry) => ({
+          date: entry.date,
+          count: 1, // Assuming each entry is a single count
+        }));
+        setHeatmapValues(values);
+      } catch (error) {
+        console.error("Error loading entries from IndexedDB:", error);
+      }
+    }
+
+    loadEntriesAndCalculateStreak();
+  }, []);
+
   const today = new Date();
-  const heatmapValues = Array.from({ length: 365 }, (_, i) => ({
-    date: new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate() - 364 + i
-    ),
-    count: Math.random() > 0.3 ? Math.floor(Math.random() * 4) + 1 : 0,
-  }));
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -101,7 +162,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-center">
-                <p className="text-5xl font-bold text-primary">7</p>
+                <p className="text-5xl font-bold text-primary">{streak}</p>
                 <p className="text-sm text-muted-foreground">Days</p>
               </div>
             </CardContent>

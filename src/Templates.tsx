@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +17,39 @@ import { PlusCircle, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 // import { Layout } from "@/components/layout";
+import { openDB } from "idb";
+
+// Initialize a separate IndexedDB for selected template
+async function initSelectedTemplateDB() {
+  return openDB("selectedTemplateDB", 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains("selectedTemplate")) {
+        db.createObjectStore("selectedTemplate", { keyPath: "id" });
+      }
+    },
+  });
+}
+
+// Save selected template to the separate IndexedDB
+async function saveSelectedTemplate(template) {
+  const db = await initSelectedTemplateDB();
+  const tx = db.transaction("selectedTemplate", "readwrite");
+  const store = tx.objectStore("selectedTemplate");
+
+  // Clear existing selected templates
+  await store.clear();
+
+  // Save the new selected template
+  await store.put(template);
+
+  await tx.done;
+}
+
+// Load selected template from the separate IndexedDB
+async function loadSelectedTemplate() {
+  const db = await initSelectedTemplateDB();
+  return await db.get("selectedTemplate", 1);
+}
 
 const predefinedTemplates = [
   {
@@ -48,6 +81,15 @@ export default function Templates() {
   );
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Load the selected template from the separate IndexedDB on component mount
+    loadSelectedTemplate().then((template) => {
+      if (template) {
+        setSelectedTemplate(template);
+      }
+    });
+  }, []);
+
   const handleSaveTemplate = () => {
     if (newTemplate.title && newTemplate.content) {
       const newTemplateWithId = { ...newTemplate, id: Date.now() };
@@ -64,6 +106,7 @@ export default function Templates() {
 
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template);
+    saveSelectedTemplate(template); // Save the selected template
     toast({
       title: "Template Selected",
       description: `"${template.title}" will be used for your next entry.`,

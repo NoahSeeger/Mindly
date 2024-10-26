@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -26,35 +26,135 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+import {
+  LeadingActions,
+  SwipeableList,
+  SwipeableListItem,
+  SwipeAction,
+  TrailingActions,
+} from "react-swipeable-list";
+import "react-swipeable-list/dist/styles.css";
+
 import { motion } from "framer-motion";
 import { format, subYears, getYear } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 
-// This is mock data. In a real application, you'd fetch this from your backend.
-const mockEntries = Array.from({ length: 1000 }, (_, i) => ({
-  id: i + 1,
-  date: subYears(new Date(), Math.floor(i / 365)),
-  content: `This is entry ${
-    i + 1
-  }. Today, I'm grateful for the beautiful sunset I witnessed. The sky was painted with vibrant hues of orange and pink, reminding me of the beauty that surrounds us every day. It made me pause and appreciate the simple moments in life. I also had a great conversation with an old friend, which brought back fond memories and made me realize how fortunate I am to have such lasting relationships. Lastly, I'm thankful for the progress I made on my personal project today. Even though it was challenging, I persevered and learned something new in the process.`,
-  image: i % 3 === 0 ? "/placeholder.svg?height=200&width=300" : null,
-}));
+// Open the IndexedDB database
+function openDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("journalDB", 1);
+
+    request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains("entries")) {
+        db.createObjectStore("entries", { keyPath: "id", autoIncrement: true });
+      }
+    };
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = (event: Event) => {
+      const target = event.target as IDBOpenDBRequest;
+      reject(`Database error: ${target.error}`);
+    };
+  });
+}
+
+// Define the Entry interface
+interface Entry {
+  id: number;
+  date: string;
+  entry: string;
+  image?: string;
+}
+
+// Retrieve all entries from the IndexedDB
+async function getAllEntries(): Promise<Entry[]> {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction("entries", "readonly");
+    const objectStore = transaction.objectStore("entries");
+    const request = objectStore.getAll();
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = (event: Event) => {
+      const target = event.target as IDBRequest;
+      reject(`Error fetching entries: ${target.error}`);
+    };
+  });
+}
+
+const trailingActions = (entry: Entry, onDelete: (entry: Entry) => void) => (
+  <TrailingActions>
+    <SwipeAction destructive={true} onClick={() => onDelete(entry)}>
+      <Trash2 className="bg-red-500 flex justify-end w-full h-full" />
+    </SwipeAction>
+  </TrailingActions>
+);
+
+// Function to handle deleting an entry from IndexedDB
+async function deleteEntry(
+  entry: Entry,
+  setEntries: React.Dispatch<React.SetStateAction<Entry[]>>
+) {
+  const db = await openDatabase();
+  const transaction = db.transaction("entries", "readwrite");
+  const objectStore = transaction.objectStore("entries");
+
+  objectStore.delete(entry.id).onsuccess = () => {
+    // Update the state and re-load entries from IndexedDB
+    setEntries([]);
+    async function loadEntries() {
+      try {
+        const storedEntries = await getAllEntries();
+        setEntries(storedEntries);
+        console.log("Loaded entries from IndexedDB:", storedEntries);
+      } catch (error) {
+        console.error("Error loading entries from IndexedDB:", error);
+      }
+    }
+
+    loadEntries();
+  };
+}
 
 export default function History() {
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
-  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedYear, setSelectedYear] = useState(
     getYear(new Date()).toString()
   );
   const entriesPerPage = 10;
 
+  useEffect(() => {
+    // Load data from IndexedDB
+    async function loadEntries() {
+      try {
+        const storedEntries = await getAllEntries();
+        setEntries(storedEntries);
+        console.log("Loaded entries from IndexedDB:", storedEntries);
+      } catch (error) {
+        console.error("Error loading entries from IndexedDB:", error);
+      }
+    }
+
+    loadEntries();
+  }, []);
+
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
-    const entry = mockEntries.find(
-      (e) => e.date.toDateString() === date?.toDateString()
+    const entry = entries.find(
+      (e) => new Date(e.date).toDateString() === date?.toDateString()
     );
     if (entry) {
       setSelectedEntry(entry);
@@ -65,13 +165,17 @@ export default function History() {
 
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = mockEntries.slice(indexOfFirstEntry, indexOfLastEntry);
+  const currentEntries = entries.slice(indexOfFirstEntry, indexOfLastEntry);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const years = Array.from(
-    new Set(mockEntries.map((entry) => getYear(entry.date)))
+    new Set(entries.map((entry) => getYear(new Date(entry.date))))
   );
+
+  const handleDeleteEntry = (entry: Entry) => {
+    deleteEntry(entry, setEntries);
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -92,49 +196,59 @@ export default function History() {
             <CardContent>
               <ul className="space-y-4">
                 {currentEntries.map((entry) => (
-                  <motion.li
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Drawer>
-                      <DrawerTrigger asChild>
-                        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                          <CardHeader>
-                            <CardTitle>
-                              {format(entry.date, "MMMM d, yyyy")}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm line-clamp-3">
-                              {entry.content}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </DrawerTrigger>
-                      <DrawerContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                        <DrawerHeader>
-                          <DrawerTitle>
-                            {format(entry.date, "MMMM d, yyyy")}
-                          </DrawerTitle>
-                          <DrawerDescription>
-                            Your journal entry for this date
-                          </DrawerDescription>
-                        </DrawerHeader>
-                        <div className="mt-4 mb-10 space-y-2 flex justify-center">
-                          <p className="text-sm w-10/12">{entry.content}</p>
-                          {entry.image && (
-                            <img
-                              src={entry.image}
-                              alt="Journal entry image"
-                              className="w-full h-auto rounded-md"
-                            />
-                          )}
-                        </div>
-                      </DrawerContent>
-                    </Drawer>
-                  </motion.li>
+                  <SwipeableList fullSwipe={true}>
+                    <SwipeableListItem
+                      key={entry.id}
+                      trailingActions={trailingActions(
+                        entry,
+                        handleDeleteEntry
+                      )}
+                    >
+                      <motion.li
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-full"
+                      >
+                        <Drawer>
+                          <DrawerTrigger asChild>
+                            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                              <CardHeader>
+                                <CardTitle>
+                                  {format(new Date(entry.date), "MMMM d, yyyy")}
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-sm line-clamp-3">
+                                  {entry.entry}
+                                </p>
+                              </CardContent>
+                            </Card>
+                          </DrawerTrigger>
+                          <DrawerContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                            <DrawerHeader>
+                              <DrawerTitle>
+                                {format(new Date(entry.date), "MMMM d, yyyy")}
+                              </DrawerTitle>
+                              <DrawerDescription>
+                                Your journal entry for this date
+                              </DrawerDescription>
+                            </DrawerHeader>
+                            <div className="mt-4 mb-10 space-y-2">
+                              <p className="text-sm px-5">{entry.entry}</p>
+                              {entry.image && (
+                                <img
+                                  src={entry.image}
+                                  alt="Journal entry image"
+                                  className="w-full h-auto rounded-md"
+                                />
+                              )}
+                            </div>
+                          </DrawerContent>
+                        </Drawer>
+                      </motion.li>
+                    </SwipeableListItem>
+                  </SwipeableList>
                 ))}
               </ul>
               <div className="flex justify-between items-center mt-4">
@@ -147,12 +261,11 @@ export default function History() {
                   Previous
                 </Button>
                 <span>
-                  {currentPage} /{" "}
-                  {Math.ceil(mockEntries.length / entriesPerPage)}
+                  {currentPage} / {Math.ceil(entries.length / entriesPerPage)}
                 </span>
                 <Button
                   onClick={() => paginate(currentPage + 1)}
-                  disabled={indexOfLastEntry >= mockEntries.length}
+                  disabled={indexOfLastEntry >= entries.length}
                   variant="outline"
                 >
                   Next
@@ -190,7 +303,6 @@ export default function History() {
                   mode="single"
                   selected={selectedDate}
                   onSelect={handleDateSelect}
-                  year={parseInt(selectedYear)}
                   className="rounded-md border"
                 />
               </CardContent>
@@ -206,7 +318,7 @@ export default function History() {
                 <CardHeader>
                   <CardTitle>
                     {selectedEntry
-                      ? format(selectedEntry.date, "MMMM d, yyyy")
+                      ? format(new Date(selectedEntry.date), "MMMM d, yyyy")
                       : "No Entry"}
                   </CardTitle>
                   <CardDescription>
@@ -221,7 +333,7 @@ export default function History() {
                       <DrawerTrigger asChild>
                         <div className="space-y-4 cursor-pointer">
                           <p className="text-sm line-clamp-3">
-                            {selectedEntry.content}
+                            {selectedEntry.entry}
                           </p>
                           {selectedEntry.image && (
                             <img
@@ -238,14 +350,17 @@ export default function History() {
                       <DrawerContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                         <DrawerHeader>
                           <DrawerTitle>
-                            {format(selectedEntry.date, "MMMM d, yyyy")}
+                            {format(
+                              new Date(selectedEntry.date),
+                              "MMMM d, yyyy"
+                            )}
                           </DrawerTitle>
                           <DrawerDescription>
                             Your journal entry for this date
                           </DrawerDescription>
                         </DrawerHeader>
                         <div className="mt-4 space-y-4">
-                          <p className="text-sm">{selectedEntry.content}</p>
+                          <p className="text-sm">{selectedEntry.entry}</p>
                           {selectedEntry.image && (
                             <img
                               src={selectedEntry.image}
